@@ -12,6 +12,7 @@ from app.domains.tpo.schemas import (
 )
 from app.core.exceptions import AppException
 from fastapi import status
+from app.tasks.analytics import generate_tpo_analytics_report
 
 class TPOService:
     @staticmethod

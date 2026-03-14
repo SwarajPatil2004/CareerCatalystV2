@@ -17,6 +17,10 @@ class Settings(BaseSettings):
     # Redis for caching/rate-limiting
     REDIS_URL: str = "redis://redis:6379/0"
     
+    # Celery configuration
+    CELERY_BROKER_URL: str = "redis://redis:6379/0"
+    CELERY_RESULT_BACKEND: str = "redis://redis:6379/0"
+
     # Rate Limiting
     RATE_LIMIT_DEFAULT: str = "100/hour"
 

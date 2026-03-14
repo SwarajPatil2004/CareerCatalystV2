@@ -4,6 +4,7 @@ from app.schemas.user import UserCreate
 from app.core.security import get_password_hash, verify_password, create_access_token
 from app.core.exceptions import AppException
 from fastapi import status
+from app.tasks.email import send_email_verification
 
 class AuthService:
     @staticmethod
@@ -27,6 +28,10 @@ class AuthService:
         db.add(db_user)
         db.commit()
         db.refresh(db_user)
+        
+        # Trigger background verification email
+        send_email_verification.delay(db_user.id, db_user.email)
+        
         return db_user
 
     @staticmethod

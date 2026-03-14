@@ -8,6 +8,7 @@ from app.schemas.student import (
 from app.services.skill_intelligence import SkillIntelligenceService
 from app.core.exceptions import AppException
 from fastapi import status
+from app.tasks.ai import analyze_resume_with_ai
 
 class StudentService:
     # --- Profile ---
@@ -29,6 +30,10 @@ class StudentService:
             setattr(profile, field, value)
         db.commit()
         db.refresh(profile)
+        
+        # Trigger background profile analysis
+        analyze_resume_with_ai.delay(user_id, profile_in.model_dump())
+        
         return profile
 
     # --- Skills ---
@@ -67,6 +72,10 @@ class StudentService:
         db.add(db_exp)
         db.commit()
         db.refresh(db_exp)
+        
+        # Trigger background analysis
+        analyze_resume_with_ai.delay(user_id, exp_in.model_dump())
+        
         return db_exp
 
     @staticmethod
@@ -134,6 +143,10 @@ class StudentService:
         db.add(db_proj)
         db.commit()
         db.refresh(db_proj)
+        
+        # Trigger background analysis
+        analyze_resume_with_ai.delay(user_id, proj_in.model_dump())
+        
         return db_proj
 
     @staticmethod

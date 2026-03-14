@@ -34,5 +34,28 @@ services:
       - backend
     restart: always
 
+  celery_worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: careercatalyst-worker
+    command: ["celery", "-A", "app.core.celery_app", "worker", "--loglevel=info"]
+    env_file: .env
+    depends_on:
+      - db
+      - redis
+    restart: always
+
+  celery_flower:
+    image: mher/flower
+    container_name: careercatalyst-flower
+    command: ["celery", "-A", "app.core.celery_app", "flower"]
+    ports:
+      - "5555:5555"
+    env_file: .env
+    depends_on:
+      - redis
+    restart: always
+
 volumes:
   postgres_data:

@@ -7,6 +7,7 @@ from slowapi.errors import RateLimitExceeded
 from app.core.config import settings
 from app.core.logging_config import setup_logging
 from app.api.router import api_router
+from fastapi.responses import RedirectResponse
 from app.core.exceptions import global_exception_handler, AppException
 
 # Initialize logging
@@ -48,6 +49,12 @@ async def health_check():
 async def readiness_check():
     # In a real app, verify DB connection here
     return {"status": "ready"}
+
+@app.get("/flower")
+async def flower_redirect():
+    # This assumes Flower is running and accessible on port 5555
+    # In a production setup with a reverse proxy, this might change
+    return RedirectResponse(url="http://localhost:5555")
 
 @app.get("/")
 async def root():
