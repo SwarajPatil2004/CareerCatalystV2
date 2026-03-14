@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, Enum as SQLEnum, ForeignKey, Text, Table, JSON
+from sqlalchemy import Column, Integer, String, DateTime, Enum as SQLEnum, ForeignKey, Text, Table, JSON, Float, Boolean
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 import enum
@@ -312,3 +312,93 @@ class InterviewProctoringLog(Base):
     timestamp = Column(DateTime(timezone=True), server_default=func.now())
 
     session = relationship("InterviewSession")
+
+# P2P Project Review Models
+class ProjectSubmission(Base):
+    __tablename__ = "project_submissions"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    project_id = Column(Integer) # ID from StudentProject
+    title = Column(String)
+    code_url = Column(String)
+    status = Column(String, default="submitted") # submitted, under_review, approved, flagged
+    timestamp = Column(DateTime(timezone=True), server_default=func.now())
+
+    user = relationship("User")
+
+class ProjectReview(Base):
+    __tablename__ = "project_reviews"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    submission_id = Column(Integer, ForeignKey("project_submissions.id"))
+    reviewer_id = Column(Integer, ForeignKey("users.id"))
+    rubric_scores = Column(JSON) # e.g. {"criteria1": 5, ...}
+    feedback = Column(Text)
+    is_approved = Column(Boolean, default=True)
+    timestamp = Column(DateTime(timezone=True), server_default=func.now())
+
+    submission = relationship("ProjectSubmission")
+    reviewer = relationship("User")
+
+class ReviewQueue(Base):
+    __tablename__ = "review_queues"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    submission_id = Column(Integer, ForeignKey("project_submissions.id"))
+    weight = Column(Integer, default=0) # For prioritization
+    
+    submission = relationship("ProjectSubmission")
+
+# Gamification Models
+class Season(Base):
+    __tablename__ = "seasons"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String)
+    start_date = Column(DateTime(timezone=True))
+    end_date = Column(DateTime(timezone=True))
+    is_active = Column(Boolean, default=True)
+
+class Squad(Base):
+    __tablename__ = "squads"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    institution_id = Column(Integer, ForeignKey("institutions.id"))
+    name = Column(String)
+    goal_xp = Column(Integer, default=5000)
+    current_xp = Column(Integer, default=0)
+
+    institution = relationship("Institution")
+
+class UserGamificationStats(Base):
+    __tablename__ = "user_gamification_stats"
+    
+    user_id = Column(Integer, ForeignKey("users.id"), primary_key=True)
+    total_xp = Column(Integer, default=0)
+    streak_days = Column(Integer, default=0)
+    streak_buffer = Column(Integer, default=0) # 1-day protection
+    last_active = Column(DateTime(timezone=True))
+    squad_id = Column(Integer, ForeignKey("squads.id"), nullable=True)
+
+    user = relationship("User")
+    squad = relationship("Squad")
+
+class Badge(Base):
+    __tablename__ = "badges"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String)
+    description = Column(String)
+    icon_url = Column(String)
+
+class UserBadge(Base):
+    __tablename__ = "user_badges"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    badge_id = Column(Integer, ForeignKey("badges.id"))
+    earned_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    user = relationship("User")
+    badge = relationship("Badge")

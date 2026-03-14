@@ -16,6 +16,8 @@ import TPOAnalytics from './pages/tpo/Analytics';
 import FounderDashboard from './pages/admin/FounderDashboard';
 import InterviewRoom from './pages/student/InterviewRoom';
 import InterviewReport from './pages/student/InterviewReport';
+import Leaderboard from './pages/student/Leaderboard';
+import ProjectHub from './pages/student/ProjectHub';
 
 const ProtectedRoute = ({ 
   children, 
@@ -118,6 +120,16 @@ const App: React.FC = () => {
           <Route path="/interviews/:sessionId/report" element={
             <ProtectedRoute allowedRole="student" layout="student">
               <InterviewReport />
+            </ProtectedRoute>
+          } />
+          <Route path="/leaderboard" element={
+            <ProtectedRoute allowedRole="student" layout="student">
+              <Leaderboard />
+            </ProtectedRoute>
+          } />
+          <Route path="/p2p" element={
+            <ProtectedRoute allowedRole="student" layout="student">
+              <ProjectHub />
             </ProtectedRoute>
           } />
           
