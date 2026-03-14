@@ -239,3 +239,29 @@ class StudentMetrics(Base):
 
     user = relationship("User")
     last_updated = Column(DateTime(timezone=True), onupdate=func.now(), server_default=func.now())
+
+class InstitutionBudget(Base):
+    __tablename__ = "institution_budgets"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    institution_id = Column(Integer, ForeignKey("institutions.id"), unique=True)
+    monthly_cap = Column(Float, default=10.0) # $10 free tier
+    current_spend = Column(Float, default=0.0)
+    last_reset = Column(DateTime(timezone=True), server_default=func.now())
+
+    institution = relationship("Institution")
+
+class AICostLog(Base):
+    __tablename__ = "ai_cost_logs"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    institution_id = Column(Integer, ForeignKey("institutions.id"))
+    model_name = Column(String) # e.g., "gemini-2.0-flash", "llama-3.3-70b"
+    input_tokens = Column(Integer)
+    output_tokens = Column(Integer)
+    cost = Column(Float)
+    timestamp = Column(DateTime(timezone=True), server_default=func.now())
+
+    user = relationship("User")
+    institution = relationship("Institution")

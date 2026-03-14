@@ -13,6 +13,7 @@ import TPODashboard from './pages/tpo/Dashboard';
 import TPOStudents from './pages/tpo/Students';
 import TPODrives from './pages/tpo/Drives';
 import TPOAnalytics from './pages/tpo/Analytics';
+import FounderDashboard from './pages/admin/FounderDashboard';
 
 const ProtectedRoute = ({ 
   children, 
@@ -98,6 +99,11 @@ const App: React.FC = () => {
           <Route path="/tpo/analytics" element={
             <ProtectedRoute allowedRole="tpo" layout="tpo">
               <TPOAnalytics />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/dashboard" element={
+            <ProtectedRoute layout="tpo">
+              <FounderDashboard />
             </ProtectedRoute>
           } />
           
