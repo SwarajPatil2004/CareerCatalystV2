@@ -18,6 +18,7 @@ import InterviewRoom from './pages/student/InterviewRoom';
 import InterviewReport from './pages/student/InterviewReport';
 import Leaderboard from './pages/student/Leaderboard';
 import ProjectHub from './pages/student/ProjectHub';
+import RecruiterDashboard from './pages/recruiter/RecruiterDashboard';
 
 const ProtectedRoute = ({ 
   children, 
@@ -131,6 +132,10 @@ const App: React.FC = () => {
             <ProtectedRoute allowedRole="student" layout="student">
               <ProjectHub />
             </ProtectedRoute>
+          } />
+          
+          <Route path="/recruiter" element={
+            <RecruiterDashboard />
           } />
           
           <Route path="*" element={<Navigate to="/" replace />} />

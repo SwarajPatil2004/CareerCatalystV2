@@ -402,3 +402,37 @@ class UserBadge(Base):
 
     user = relationship("User")
     badge = relationship("Badge")
+
+# B2B Recruiter Models
+class Company(Base):
+    __tablename__ = "companies"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, unique=True, index=True)
+    industry = Column(String)
+    size = Column(String) # e.g., 1-10, 11-50, etc.
+    is_verified = Column(Boolean, default=False)
+    branding_json = Column(JSON, default={}) # colors, logo_url, etc.
+
+class Recruiter(Base):
+    __tablename__ = "recruiters"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    company_id = Column(Integer, ForeignKey("companies.id"))
+    role = Column(String)
+    is_verified = Column(Boolean, default=False)
+
+    user = relationship("User")
+    company = relationship("Company")
+
+class Shortlist(Base):
+    __tablename__ = "shortlists"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    recruiter_id = Column(Integer, ForeignKey("recruiters.id"))
+    student_id = Column(Integer, ForeignKey("users.id"))
+    timestamp = Column(DateTime(timezone=True), server_default=func.now())
+
+    recruiter = relationship("Recruiter")
+    student = relationship("User")
