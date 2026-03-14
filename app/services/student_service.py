@@ -9,6 +9,7 @@ from app.services.skill_intelligence import SkillIntelligenceService
 from app.core.exceptions import AppException
 from fastapi import status
 from app.tasks.ai import analyze_resume_with_ai
+from app.services.analytics_service import AnalyticsService
 
 class StudentService:
     # --- Profile ---
@@ -30,6 +31,9 @@ class StudentService:
             setattr(profile, field, value)
         db.commit()
         db.refresh(profile)
+        
+        # Track profile update
+        AnalyticsService.track_event(db, user_id, "profile_update")
         
         # Trigger background profile analysis
         analyze_resume_with_ai.delay(user_id, profile_in.model_dump())
@@ -72,6 +76,9 @@ class StudentService:
         db.add(db_exp)
         db.commit()
         db.refresh(db_exp)
+        
+        # Track experience creation
+        AnalyticsService.track_event(db, user_id, "add_experience", {"title": exp_in.title})
         
         # Trigger background analysis
         analyze_resume_with_ai.delay(user_id, exp_in.model_dump())
@@ -143,6 +150,9 @@ class StudentService:
         db.add(db_proj)
         db.commit()
         db.refresh(db_proj)
+        
+        # Track project creation
+        AnalyticsService.track_event(db, user_id, "add_project", {"title": proj_in.title})
         
         # Trigger background analysis
         analyze_resume_with_ai.delay(user_id, proj_in.model_dump())

@@ -215,3 +215,27 @@ class UserRoadmapProgress(Base):
     completed_task_ids = Column(JSON, default=[]) # Storing as array of IDs
     total_xp = Column(Integer, default=0)
     last_updated = Column(DateTime(timezone=True), onupdate=func.now(), server_default=func.now())
+
+class AnalyticsEvent(Base):
+    __tablename__ = "analytics_events"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    event_type = Column(String)  # e.g., "login", "task_complete", "resume_edit"
+    metadata_json = Column(JSON, default={})
+    timestamp = Column(DateTime(timezone=True), server_default=func.now())
+
+    user = relationship("User")
+
+class StudentMetrics(Base):
+    __tablename__ = "student_metrics"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    date = Column(DateTime(timezone=True), server_default=func.now())
+    activity_score = Column(Integer, default=0)
+    xp_gained = Column(Integer, default=0)
+    completeness_score = Column(Float, default=0.0)
+
+    user = relationship("User")
+    last_updated = Column(DateTime(timezone=True), onupdate=func.now(), server_default=func.now())

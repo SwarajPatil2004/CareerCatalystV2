@@ -13,6 +13,7 @@ from app.domains.tpo.schemas import (
 from app.core.exceptions import AppException
 from fastapi import status
 from app.tasks.analytics import generate_tpo_analytics_report
+from app.services.analytics_service import AnalyticsService
 
 class TPOService:
     @staticmethod
@@ -138,6 +139,14 @@ class TPOService:
         
         db.commit()
         db.refresh(assoc)
+        
+        # Track student status update in drive
+        AnalyticsService.track_event(db, institution_id, "update_student_drive_status", {
+            "drive_id": drive_id,
+            "student_id": data.student_profile_id,
+            "status": data.status
+        })
+        
         return assoc
 
     @staticmethod

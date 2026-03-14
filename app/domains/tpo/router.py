@@ -11,6 +11,8 @@ from app.domains.tpo.schemas import (
     StudentManagementInfo, DriveParticipationUpdate, StudentDriveStatusResponse
 )
 from app.core.exceptions import AppException
+from app.services.analytics_service import AnalyticsService
+from fastapi.responses import Response
 
 router = APIRouter()
 
@@ -136,3 +138,32 @@ def get_drive_students(
 ):
     profile = TPOService.get_tpo_profile(db, current_user.id)
     return TPOService.get_drive_participants(db, drive_id, profile.institution_id)
+
+# Analytics
+@router.get("/analytics/health")
+def get_health(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+    _ = Depends(tpo_only)
+):
+    profile = TPOService.get_tpo_profile(db, current_user.id)
+    if not profile:
+        raise AppException("TPO profile not found", status.HTTP_404_NOT_FOUND)
+    return AnalyticsService.get_institution_health(db, profile.institution_id)
+
+@router.get("/analytics/export")
+def export_csv(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+    _ = Depends(tpo_only)
+):
+    profile = TPOService.get_tpo_profile(db, current_user.id)
+    if not profile:
+        raise AppException("TPO profile not found", status.HTTP_404_NOT_FOUND)
+    
+    csv_data = AnalyticsService.export_analytics_csv(db, profile.institution_id)
+    return Response(
+        content=csv_data,
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=institution_analytics.csv"}
+    )

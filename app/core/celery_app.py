@@ -9,7 +9,8 @@ celery_app = Celery(
     include=[
         "app.tasks.email",
         "app.tasks.ai",
-        "app.tasks.analytics"
+        "app.tasks.analytics",
+        "app.tasks.reporting"
     ]
 )
 
@@ -29,5 +30,13 @@ celery_app.conf.update(
         "app.tasks.email.*": {"queue": "high"},
         "app.tasks.ai.*": {"queue": "medium"},
         "app.tasks.analytics.*": {"queue": "low"},
+        "app.tasks.reporting.*": {"queue": "low"},
+    },
+    beat_schedule={
+        "weekly-tpo-report": {
+            "task": "app.tasks.reporting.generate_weekly_tpo_report",
+            "schedule": 604800.0, # Every 7 days
+            "args": (1,) # Generic ID placeholder
+        },
     }
 )

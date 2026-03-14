@@ -12,6 +12,7 @@ import TPOLogin from './pages/tpo/Login';
 import TPODashboard from './pages/tpo/Dashboard';
 import TPOStudents from './pages/tpo/Students';
 import TPODrives from './pages/tpo/Drives';
+import TPOAnalytics from './pages/tpo/Analytics';
 
 const ProtectedRoute = ({ 
   children, 
@@ -92,6 +93,11 @@ const App: React.FC = () => {
           <Route path="/tpo/drives" element={
             <ProtectedRoute allowedRole="tpo" layout="tpo">
               <TPODrives />
+            </ProtectedRoute>
+          } />
+          <Route path="/tpo/analytics" element={
+            <ProtectedRoute allowedRole="tpo" layout="tpo">
+              <TPOAnalytics />
             </ProtectedRoute>
           } />
           

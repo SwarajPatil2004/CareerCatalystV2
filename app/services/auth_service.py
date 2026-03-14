@@ -5,6 +5,7 @@ from app.core.security import get_password_hash, verify_password, create_access_
 from app.core.exceptions import AppException
 from fastapi import status
 from app.tasks.email import send_email_verification
+from app.services.analytics_service import AnalyticsService
 
 class AuthService:
     @staticmethod
@@ -39,6 +40,10 @@ class AuthService:
         user = AuthService.get_user_by_email(db, email)
         if not user or not verify_password(password, user.hashed_password):
             return None
+        
+        # Track login event
+        AnalyticsService.track_event(db, user.id, "login", {"email": email})
+        
         return user
 
     @staticmethod
