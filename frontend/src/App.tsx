@@ -14,6 +14,8 @@ import TPOStudents from './pages/tpo/Students';
 import TPODrives from './pages/tpo/Drives';
 import TPOAnalytics from './pages/tpo/Analytics';
 import FounderDashboard from './pages/admin/FounderDashboard';
+import InterviewRoom from './pages/student/InterviewRoom';
+import InterviewReport from './pages/student/InterviewReport';
 
 const ProtectedRoute = ({ 
   children, 
@@ -104,6 +106,18 @@ const App: React.FC = () => {
           <Route path="/admin/dashboard" element={
             <ProtectedRoute layout="tpo">
               <FounderDashboard />
+            </ProtectedRoute>
+          } />
+          
+          {/* Student Interview Routes */}
+          <Route path="/interviews/:sessionId" element={
+            <ProtectedRoute allowedRole="student" layout="student">
+              <InterviewRoom />
+            </ProtectedRoute>
+          } />
+          <Route path="/interviews/:sessionId/report" element={
+            <ProtectedRoute allowedRole="student" layout="student">
+              <InterviewReport />
             </ProtectedRoute>
           } />
           

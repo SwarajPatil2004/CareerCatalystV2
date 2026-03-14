@@ -265,3 +265,50 @@ class AICostLog(Base):
 
     user = relationship("User")
     institution = relationship("Institution")
+
+class InterviewSession(Base):
+    __tablename__ = "interview_sessions"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    track = Column(String) # e.g., "full_stack", "data_science"
+    status = Column(String, default="active") # active, completed, cancelled
+    start_time = Column(DateTime(timezone=True), server_default=func.now())
+    end_time = Column(DateTime(timezone=True), nullable=True)
+    total_score = Column(Float, default=0.0)
+    xp_earned = Column(Integer, default=0)
+
+    user = relationship("User")
+
+class InterviewQuestion(Base):
+    __tablename__ = "interview_questions"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    session_id = Column(Integer, ForeignKey("interview_sessions.id"))
+    text = Column(Text)
+    type = Column(String) # technical, behavioral
+    order = Column(Integer)
+
+    session = relationship("InterviewSession")
+
+class InterviewResponse(Base):
+    __tablename__ = "interview_responses"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    question_id = Column(Integer, ForeignKey("interview_questions.id"))
+    transcript = Column(Text)
+    audio_url = Column(String, nullable=True)
+    evaluation_json = Column(JSON, default={})
+    timestamp = Column(DateTime(timezone=True), server_default=func.now())
+
+    question = relationship("InterviewQuestion")
+
+class InterviewProctoringLog(Base):
+    __tablename__ = "interview_proctoring_logs"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    session_id = Column(Integer, ForeignKey("interview_sessions.id"))
+    event_type = Column(String) # tab_switch, blur
+    timestamp = Column(DateTime(timezone=True), server_default=func.now())
+
+    session = relationship("InterviewSession")
