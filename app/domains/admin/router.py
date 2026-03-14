@@ -1,22 +1,29 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.db.database import get_db
-from app.domains.identity.dependencies import get_current_user, RoleChecker
+from app.domains.identity.dependencies import get_current_user
 from app.db.models import User, UserRole
-from app.services.ai_cost_service import AICostService
+from app.services.admin_service import AdminService
+from typing import List, Dict, Any
 
-router = APIRouter()
+router = APIRouter(prefix="/admin", tags=["admin"])
 
-# Super admin only or TPO for their own? 
-# The user said "Founder", which implies a higher level. 
-# Let's assume ADMIN role exists or we use TPO for now but target Founder.
-# If ADMIN role doesn't exist, I'll add it or use TPO.
-admin_only = RoleChecker(allowed_roles=[UserRole.TPO]) # Target TPO for now if ADMIN is missing
+def require_admin(current_user: User = Depends(get_current_user)):
+    if current_user.role != UserRole.ADMIN:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin level permissions required."
+        )
+    return current_user
 
-@router.get("/costs")
-def get_costs(
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
-    _ = Depends(admin_only)
-):
-    return AICostService.get_founder_dashboard_data(db)
+@router.get("/stats", dependencies=[Depends(require_admin)])
+def get_stats(db: Session = Depends(get_db)):
+    return AdminService.get_platform_stats(db)
+
+@router.patch("/institutions/{id}/approve", dependencies=[Depends(require_admin)])
+def approve_institution(id: int, db: Session = Depends(get_db)):
+    return AdminService.approve_institution(db, id)
+
+@router.post("/users/{id}/suspend", dependencies=[Depends(require_admin)])
+def suspend_user(id: int, db: Session = Depends(get_db)):
+    return AdminService.suspend_user(db, id)

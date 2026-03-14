@@ -20,6 +20,7 @@ import Leaderboard from './pages/student/Leaderboard';
 import ProjectHub from './pages/student/ProjectHub';
 import RecruiterDashboard from './pages/recruiter/RecruiterDashboard';
 import PublicPortfolio from './pages/portfolio/PublicPortfolio';
+import AdminDashboard from './pages/admin/AdminDashboard';
 
 const ProtectedRoute = ({ 
   children, 
@@ -137,6 +138,10 @@ const App: React.FC = () => {
           
           <Route path="/recruiter" element={
             <RecruiterDashboard />
+          } />
+
+          <Route path="/admin" element={
+            <AdminDashboard />
           } />
 
           <Route path="/p/:slug" element={

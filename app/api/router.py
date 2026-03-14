@@ -12,7 +12,7 @@ from app.domains.portfolio.router import router as portfolio_router
 
 api_router = APIRouter()
 api_router.include_router(identity_router, prefix="/auth", tags=["auth"])
-api_router.include_router(student_router, prefix="/students", tags=["students"])
+api_router.include_router(student_router, prefix="/students", tags=["student"])
 api_router.include_router(tpo_router, prefix="/tpo", tags=["tpo"])
 api_router.include_router(roadmap_router, prefix="/roadmaps", tags=["roadmap"])
 api_router.include_router(admin_router, prefix="/admin", tags=["admin"])

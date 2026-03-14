@@ -49,6 +49,8 @@ class Institution(Base):
     state = Column(String)
     country = Column(String)
     type = Column(SQLEnum(InstitutionType), default=InstitutionType.OTHER)
+    status = Column(String, default="pending") # pending, approved, suspended
+    feature_flags = Column(JSON, default={})
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     tpo_profiles = relationship("TPOProfile", back_populates="institution")
