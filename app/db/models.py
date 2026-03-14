@@ -397,11 +397,13 @@ class UserBadge(Base):
     
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"))
-    badge_id = Column(Integer, ForeignKey("badges.id"))
+    badge_id = Column(Integer, ForeignKey("badges.id"), nullable=True)
+    skill_badge_id = Column(Integer, ForeignKey("skill_badges.id"), nullable=True)
     earned_at = Column(DateTime(timezone=True), server_default=func.now())
 
     user = relationship("User")
     badge = relationship("Badge")
+    skill_badge = relationship("SkillBadge", back_populates="user_badges")
 
 # B2B Recruiter Models
 class Company(Base):
@@ -436,3 +438,25 @@ class Shortlist(Base):
 
     recruiter = relationship("Recruiter")
     student = relationship("User")
+
+class SkillBadge(Base):
+    __tablename__ = "skill_badges"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    skill_name = Column(String)
+    level = Column(String) # Bronze, Silver, Gold
+    criteria_json = Column(JSON)
+    verification_method = Column(String) # p2p, ai_mock, roadmap, automated_test
+
+    user_badges = relationship("UserBadge", back_populates="skill_badge")
+
+class ProjectDefense(Base):
+    __tablename__ = "project_defenses"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    submission_id = Column(Integer, ForeignKey("project_submissions.id"))
+    video_url = Column(String)
+    is_verified = Column(Boolean, default=False)
+    timestamp = Column(DateTime(timezone=True), server_default=func.now())
+
+    submission = relationship("ProjectSubmission")
