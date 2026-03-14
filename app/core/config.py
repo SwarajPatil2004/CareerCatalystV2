@@ -14,6 +14,12 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
 
+    # Redis for caching/rate-limiting
+    REDIS_URL: str = "redis://redis:6379/0"
+    
+    # Rate Limiting
+    RATE_LIMIT_DEFAULT: str = "100/hour"
+
     # CORS settings
     CORS_ORIGINS: list[str] = ["http://localhost:3000", "http://localhost:5173"]
 
