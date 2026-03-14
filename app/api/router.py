@@ -1,10 +1,10 @@
 from fastapi import APIRouter
 
+from app.domains.identity.router import router as identity_router
+
 api_router = APIRouter()
 
-# Placeholder for domain routers
-# from app.domains.identity.router import router as identity_router
-# api_router.include_router(identity_router, prefix="/identity", tags=["identity"])
+api_router.include_router(identity_router, prefix="/auth", tags=["auth"])
 
 @api_router.get("/health")
 async def health_check():
