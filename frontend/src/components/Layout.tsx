@@ -14,6 +14,7 @@ const Sidebar: React.FC<{ isOpen: boolean; toggle: () => void }> = ({ isOpen, to
   const location = useLocation();
   const navItems = [
     { name: 'Dashboard', path: '/', icon: LayoutDashboard },
+    { name: 'Roadmaps', path: '/roadmaps', icon: GraduationCap },
     { name: 'Profile', path: '/profile', icon: UserCircle },
   ];
 

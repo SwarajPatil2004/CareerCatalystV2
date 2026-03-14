@@ -7,22 +7,21 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import Profile from './pages/Profile';
+import CareerGrind from './pages/CareerGrind';
 import TPOLogin from './pages/tpo/Login';
 import TPODashboard from './pages/tpo/Dashboard';
 import TPOStudents from './pages/tpo/Students';
 import TPODrives from './pages/tpo/Drives';
 
-interface ProtectedRouteProps {
-  children: React.ReactNode;
-  allowedRole?: 'student' | 'tpo';
-  layout: 'student' | 'tpo';
-}
-
 const ProtectedRoute = ({ 
   children, 
   allowedRole, 
   layout 
-}: ProtectedRouteProps) => {
+}: { 
+  children: React.ReactNode; 
+  allowedRole?: 'student' | 'tpo'; 
+  layout: 'student' | 'tpo' 
+}) => {
   const { user, loading } = useAuth();
 
   if (loading) return (
@@ -39,7 +38,15 @@ const ProtectedRoute = ({
     return <Navigate to={user.role === 'tpo' ? "/tpo" : "/"} replace />;
   }
 
-  return layout === 'tpo' ? <AdminLayout>{children}</AdminLayout> : <MainLayout>{children}</MainLayout>;
+  return (
+    <>
+      {layout === 'tpo' ? (
+        <AdminLayout>{children}</AdminLayout>
+      ) : (
+        <MainLayout>{children}</MainLayout>
+      )}
+    </>
+  );
 };
 
 const App: React.FC = () => {
@@ -62,6 +69,12 @@ const App: React.FC = () => {
           <Route path="/profile" element={
             <ProtectedRoute allowedRole="student" layout="student">
               <Profile />
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/roadmaps" element={
+            <ProtectedRoute allowedRole="student" layout="student">
+              <CareerGrind />
             </ProtectedRoute>
           } />
           

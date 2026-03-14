@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   Users, 
@@ -88,7 +88,7 @@ const AdminSidebar: React.FC<{ isOpen: boolean; toggle: () => void }> = ({ isOpe
   );
 };
 
-const AdminLayout: React.FC = () => {
+const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const { user } = useAuth();
 
@@ -119,7 +119,7 @@ const AdminLayout: React.FC = () => {
 
         {/* Content Area */}
         <div className="p-4 md:p-8 flex-1">
-          <Outlet />
+          {children}
         </div>
       </main>
     </div>

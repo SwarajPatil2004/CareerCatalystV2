@@ -168,3 +168,50 @@ class StudentDriveAssociation(Base):
 
     student = relationship("StudentProfile", back_populates="drive_associations")
     drive = relationship("PlacementDrive", back_populates="student_associations")
+
+class Roadmap(Base):
+    __tablename__ = "roadmaps"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, nullable=False)
+    slug = Column(String, unique=True, index=True, nullable=False)
+    description = Column(Text)
+    career_type = Column(String) # e.g., full_stack, data_science
+    is_active = Column(Integer, default=1) # Using int as bool for SQLite compatibility if needed, but project uses Postgres
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    phases = relationship("RoadmapPhase", back_populates="roadmap", cascade="all, delete-orphan")
+
+class RoadmapPhase(Base):
+    __tablename__ = "roadmap_phases"
+
+    id = Column(Integer, primary_key=True, index=True)
+    roadmap_id = Column(Integer, ForeignKey("roadmaps.id"), nullable=False)
+    phase_index = Column(Integer, nullable=False)
+    title = Column(String, nullable=False)
+    description = Column(Text)
+
+    roadmap = relationship("Roadmap", back_populates="phases")
+    tasks = relationship("RoadmapTask", back_populates="phase", cascade="all, delete-orphan")
+
+class RoadmapTask(Base):
+    __tablename__ = "roadmap_tasks"
+
+    id = Column(Integer, primary_key=True, index=True)
+    phase_id = Column(Integer, ForeignKey("roadmap_phases.id"), nullable=False)
+    title = Column(String, nullable=False)
+    description = Column(Text)
+    resource_link = Column(String)
+    xp = Column(Integer, default=10)
+
+    phase = relationship("RoadmapPhase", back_populates="tasks")
+
+class UserRoadmapProgress(Base):
+    __tablename__ = "user_roadmap_progress"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    roadmap_id = Column(Integer, ForeignKey("roadmaps.id"), nullable=False)
+    completed_task_ids = Column(JSON, default=[]) # Storing as array of IDs
+    total_xp = Column(Integer, default=0)
+    last_updated = Column(DateTime(timezone=True), onupdate=func.now(), server_default=func.now())
