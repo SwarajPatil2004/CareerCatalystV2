@@ -5,6 +5,7 @@ from app.schemas.student import (
     StudentProfileUpdate, SkillCreate, ExperienceCreate, 
     CertificateCreate, AchievementCreate, ProjectCreate
 )
+from app.services.skill_intelligence import SkillIntelligenceService
 from app.core.exceptions import AppException
 from fastapi import status
 
@@ -58,7 +59,11 @@ class StudentService:
 
     @staticmethod
     def create_experience(db: Session, user_id: int, exp_in: ExperienceCreate):
-        db_exp = Experience(**exp_in.model_dump(), user_id=user_id)
+        analysis = None
+        if exp_in.description:
+            analysis = SkillIntelligenceService.analyze_bullet_point(exp_in.description).model_dump()
+            
+        db_exp = Experience(**exp_in.model_dump(), user_id=user_id, analysis_results=analysis)
         db.add(db_exp)
         db.commit()
         db.refresh(db_exp)
@@ -121,7 +126,11 @@ class StudentService:
 
     @staticmethod
     def create_project(db: Session, user_id: int, proj_in: ProjectCreate):
-        db_proj = Project(**proj_in.model_dump(), user_id=user_id)
+        analysis = None
+        if proj_in.summary:
+            analysis = SkillIntelligenceService.analyze_bullet_point(proj_in.summary).model_dump()
+            
+        db_proj = Project(**proj_in.model_dump(), user_id=user_id, analysis_results=analysis)
         db.add(db_proj)
         db.commit()
         db.refresh(db_proj)

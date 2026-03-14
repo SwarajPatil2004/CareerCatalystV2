@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import Optional, List
 from pydantic import BaseModel, HttpUrl
+from typing import Optional, List, Any
 from app.schemas.base import BaseSchema
 
 # Profile Schemas
@@ -47,6 +48,7 @@ class ExperienceCreate(ExperienceBase):
 
 class ExperienceOut(ExperienceBase):
     id: int
+    analysis_results: Optional[Any] = None
 
 # Certificate Schemas
 class CertificateBase(BaseSchema):
@@ -90,3 +92,4 @@ class ProjectCreate(ProjectBase):
 
 class ProjectOut(ProjectBase):
     id: int
+    analysis_results: Optional[Any] = None

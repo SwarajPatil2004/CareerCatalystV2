@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, Enum as SQLEnum, ForeignKey, Text, Table
+from sqlalchemy import Column, Integer, String, DateTime, Enum as SQLEnum, ForeignKey, Text, Table, JSON
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 import enum
@@ -137,6 +137,7 @@ class Project(Base):
     github_link = Column(String)
     demo_link = Column(String)
     impact = Column(String)
+    analysis_results = Column(JSON, nullable=True)
 
 class PlacementDrive(Base):
     __tablename__ = "placement_drives"
