@@ -1,5 +1,6 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from enum import Enum
+from typing import Optional, List
 
 class Environment(str, Enum):
     DEV = "dev"
@@ -9,6 +10,7 @@ class Settings(BaseSettings):
     DATABASE_URL: str
     SECRET_KEY: str
     ENVIRONMENT: Environment = Environment.DEV
+    SENTRY_DSN: Optional[str] = None
     
     # Auth settings
     ALGORITHM: str = "HS256"
@@ -20,6 +22,10 @@ class Settings(BaseSettings):
     # Celery configuration
     CELERY_BROKER_URL: str = "redis://redis:6379/0"
     CELERY_RESULT_BACKEND: str = "redis://redis:6379/0"
+
+    # Security
+    PII_ENCRYPTION_KEY: Optional[str] = None
+    ALLOWED_HOSTS: List[str] = ["*"]
 
     # Rate Limiting
     RATE_LIMIT_DEFAULT: str = "100/hour"

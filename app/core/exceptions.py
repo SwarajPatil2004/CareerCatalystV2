@@ -13,6 +13,8 @@ class AppException(Exception):
         self.status_code = status_code
         self.details = details
 
+APIException = AppException
+
 async def global_exception_handler(request: Request, exc: Exception):
     if isinstance(exc, AppException):
         return JSONResponse(

@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from app.db.models import User, Institution, PlatformMetric, InterviewSession, ProjectSubmission
+from app.services.compliance_service import ComplianceService
 from datetime import datetime, timedelta
 from typing import Dict, Any
 
@@ -29,6 +30,7 @@ class AdminService:
         inst = db.query(Institution).filter(Institution.id == institution_id).first()
         if inst:
             inst.status = "approved"
+            ComplianceService.log_audit_event(db, 0, "approve_institution", f"institution:{institution_id}")
             db.commit()
             return inst
         return None
@@ -38,6 +40,7 @@ class AdminService:
         user = db.query(User).filter(User.id == user_id).first()
         if user:
             user.is_active = False
+            ComplianceService.log_audit_event(db, 0, "suspend_user", f"user:{user_id}")
             db.commit()
             return user
         return None

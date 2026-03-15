@@ -3,8 +3,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
+from starlette.middleware.httpsredirect import HTTPSRedirectMiddleware
 
-from app.core.config import settings
+from app.core.config import settings, Environment
 from app.core.logging_config import setup_logging
 from app.api.router import api_router
 from fastapi.responses import RedirectResponse
@@ -42,6 +44,23 @@ class MetricsMiddleware(BaseHTTPMiddleware):
         
         return response
 
+# Security Headers Middleware
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request, call_next):
+        response = await call_next(request)
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["X-XSS-Protection"] = "1; mode=block"
+        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+        response.headers["Content-Security-Policy"] = (
+            "default-src 'self'; "
+            "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+            "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+            "img-src 'self' data: https://cdn.jsdelivr.net; "
+            "connect-src 'self' http://localhost:8000;"
+        )
+        return response
+
 app = FastAPI(
     title="CareerCatalyst API",
     description="Production-grade web platform for career development.",
@@ -51,6 +70,10 @@ app = FastAPI(
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.add_middleware(MetricsMiddleware)
+app.add_middleware(SecurityHeadersMiddleware)
+if settings.ENVIRONMENT == Environment.PROD:
+    app.add_middleware(HTTPSRedirectMiddleware)
+    app.add_middleware(TrustedHostMiddleware, allowed_hosts=settings.ALLOWED_HOSTS)
 
 # Enable CORS
 app.add_middleware(

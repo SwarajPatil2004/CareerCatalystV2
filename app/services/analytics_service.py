@@ -2,13 +2,11 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func, select, desc
 from datetime import datetime, timedelta
 from typing import List, Dict, Any
-from app.db.models import AnalyticsEvent, StudentMetrics, User, StudentProfile, Skill, PlacementDrive, StudentDriveAssociation, StudentDriveStatus
-import csv
-import io
 
 class AnalyticsService:
     @staticmethod
     def track_event(db: Session, user_id: int, event_type: str, metadata: Dict[str, Any] = None):
+        from app.db.models import AnalyticsEvent
         event = AnalyticsEvent(
             user_id=user_id,
             event_type=event_type,
@@ -20,6 +18,8 @@ class AnalyticsService:
 
     @staticmethod
     def get_institution_health(db: Session, institution_id: int):
+        from app.db.constants import StudentDriveStatus
+        from app.db.models import AnalyticsEvent, StudentProfile, Skill, PlacementDriveModel, StudentDriveJoin
         # 1. Basic Stats
         total_students = db.query(StudentProfile).filter(StudentProfile.institution_id == institution_id).count()
         
@@ -39,20 +39,28 @@ class AnalyticsService:
         ).group_by(Skill.name).order_by(desc(func.count(Skill.id))).limit(10).all()
 
         # 3. Placement Funnel
-        # Shortlisted -> Selected
+        total_eligible = db.query(StudentDriveJoin).join(
+            PlacementDriveModel, StudentDriveJoin.drive_id == PlacementDriveModel.id
+        ).filter(
+            PlacementDriveModel.institution_id == institution_id
+        ).count()
+        shortlisted = db.query(StudentDriveJoin).join(
+            PlacementDriveModel, StudentDriveJoin.drive_id == PlacementDriveModel.id
+        ).filter(
+            PlacementDriveModel.institution_id == institution_id,
+            StudentDriveJoin.status == "shortlisted"
+        ).count()
+        placed = db.query(StudentDriveJoin).join(
+            PlacementDriveModel, StudentDriveJoin.drive_id == PlacementDriveModel.id
+        ).filter(
+            PlacementDriveModel.institution_id == institution_id,
+            StudentDriveJoin.status == "selected"
+        ).count()
+        
         funnel = {
-            "shortlisted": db.query(StudentDriveAssociation).join(
-                PlacementDrive, StudentDriveAssociation.drive_id == PlacementDrive.id
-            ).filter(
-                PlacementDrive.institution_id == institution_id,
-                StudentDriveAssociation.status == "shortlisted"
-            ).count(),
-            "selected": db.query(StudentDriveAssociation).join(
-                PlacementDrive, StudentDriveAssociation.drive_id == PlacementDrive.id
-            ).filter(
-                PlacementDrive.institution_id == institution_id,
-                StudentDriveAssociation.status == "selected"
-            ).count()
+            "eligible": total_eligible,
+            "shortlisted": shortlisted,
+            "placed": placed
         }
 
         # 4. Activity Trend (Last 7 days)
@@ -80,6 +88,9 @@ class AnalyticsService:
 
     @staticmethod
     def export_analytics_csv(db: Session, institution_id: int):
+        import csv
+        import io
+        from app.db.models import AnalyticsEvent, StudentProfile
         output = io.StringIO()
         writer = csv.writer(output)
         writer.writerow(["User ID", "Event Type", "Timestamp", "Metadata"])

@@ -2,9 +2,10 @@ from sqlalchemy.orm import Session
 from sqlalchemy import select, func
 from typing import List, Optional
 from app.db.models import (
-    TPOProfile, Institution, PlacementDrive, StudentProfile, 
-    StudentDriveAssociation, User, StudentDriveStatus
+    TPOProfile, Institution, PlacementDriveModel, StudentProfile, 
+    StudentDriveJoin, User
 )
+from app.db.constants import StudentDriveStatus
 from app.domains.tpo.schemas import (
     TPOProfileCreate, TPOProfileUpdate, 
     PlacementDriveCreate, PlacementDriveUpdate,
@@ -46,29 +47,29 @@ class TPOService:
         return db_tpo
 
     @staticmethod
-    def create_placement_drive(db: Session, institution_id: int, data: PlacementDriveCreate) -> PlacementDrive:
-        db_drive = PlacementDrive(institution_id=institution_id, **data.model_dump())
+    def create_placement_drive(db: Session, institution_id: int, data: PlacementDriveCreate) -> PlacementDriveModel:
+        db_drive = PlacementDriveModel(institution_id=institution_id, **data.model_dump())
         db.add(db_drive)
         db.commit()
         db.refresh(db_drive)
         return db_drive
 
     @staticmethod
-    def get_placement_drives(db: Session, institution_id: int) -> List[PlacementDrive]:
-        return db.query(PlacementDrive).filter(PlacementDrive.institution_id == institution_id).all()
+    def get_placement_drives(db: Session, institution_id: int) -> List[PlacementDriveModel]:
+        return db.query(PlacementDriveModel).filter(PlacementDriveModel.institution_id == institution_id).all()
 
     @staticmethod
-    def get_placement_drive(db: Session, drive_id: int, institution_id: int) -> PlacementDrive:
-        drive = db.query(PlacementDrive).filter(
-            PlacementDrive.id == drive_id, 
-            PlacementDrive.institution_id == institution_id
+    def get_placement_drive(db: Session, drive_id: int, institution_id: int) -> PlacementDriveModel:
+        drive = db.query(PlacementDriveModel).filter(
+            PlacementDriveModel.id == drive_id, 
+            PlacementDriveModel.institution_id == institution_id
         ).first()
         if not drive:
             raise AppException("Placement drive not found", status.HTTP_404_NOT_FOUND)
         return drive
 
     @staticmethod
-    def update_placement_drive(db: Session, drive_id: int, institution_id: int, data: PlacementDriveUpdate) -> PlacementDrive:
+    def update_placement_drive(db: Session, drive_id: int, institution_id: int, data: PlacementDriveUpdate) -> PlacementDriveModel:
         db_drive = TPOService.get_placement_drive(db, drive_id, institution_id)
         for key, value in data.model_dump(exclude_unset=True).items():
             setattr(db_drive, key, value)
@@ -122,15 +123,15 @@ class TPOService:
         if not student:
             raise AppException("Student not found in your institution", status.HTTP_404_NOT_FOUND)
         
-        assoc = db.query(StudentDriveAssociation).filter(
-            StudentDriveAssociation.drive_id == drive_id,
-            StudentDriveAssociation.student_profile_id == data.student_profile_id
+        assoc = db.query(StudentDriveJoin).filter(
+            StudentDriveJoin.drive_id == drive_id,
+            StudentDriveJoin.student_profile_id == data.student_profile_id
         ).first()
         
         if assoc:
             assoc.status = data.status
         else:
-            assoc = StudentDriveAssociation(
+            assoc = StudentDriveJoin(
                 drive_id=drive_id,
                 student_profile_id=data.student_profile_id,
                 status=data.status
@@ -154,6 +155,6 @@ class TPOService:
         # Verify drive
         TPOService.get_placement_drive(db, drive_id, institution_id)
         
-        return db.query(StudentDriveAssociation).filter(
-            StudentDriveAssociation.drive_id == drive_id
+        return db.query(StudentDriveJoin).filter(
+            StudentDriveJoin.drive_id == drive_id
         ).all()

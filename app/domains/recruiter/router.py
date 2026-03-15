@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.orm import Session
 from app.db.database import get_db
-from app.domains.identity.dependencies import get_current_user
+from app.api.deps import get_current_user
 from app.db.models import User, Recruiter
 from app.services.recruiter_service import RecruiterService
 from .schemas import CandidateSearchFilters, ShortlistRequest, InterviewRequest

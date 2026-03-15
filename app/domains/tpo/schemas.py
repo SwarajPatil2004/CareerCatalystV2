@@ -1,7 +1,7 @@
 from pydantic import BaseModel, ConfigDict
 from datetime import datetime
 from typing import Optional, List
-from app.db.models import InstitutionType, DriveStatus, StudentDriveStatus
+from app.db.constants import InstitutionType, DriveStatus, StudentDriveStatus
 
 class InstitutionBase(BaseModel):
     name: str

@@ -4,26 +4,37 @@ from sqlalchemy.sql import func
 import enum
 from app.db.base import Base
 
-class UserRole(str, enum.Enum):
-    STUDENT = "student"
-    TPO = "tpo"
+from app.db.constants import UserRole, InstitutionType, DriveStatus, StudentDriveStatus
 
-class InstitutionType(str, enum.Enum):
-    ENGINEERING = "engineering"
-    MANAGEMENT = "management"
-    OTHER = "other"
+class PlacementDriveModel(Base):
+    __tablename__ = "placement_drives"
 
-class DriveStatus(str, enum.Enum):
-    UPCOMING = "upcoming"
-    ONGOING = "ongoing"
-    COMPLETED = "completed"
-    CANCELLED = "cancelled"
+    id = Column(Integer, primary_key=True, index=True)
+    institution_id = Column(Integer, ForeignKey("institutions.id"), nullable=False)
+    title = Column(String, nullable=False)
+    company_name = Column(String, nullable=False)
+    role = Column(String, nullable=False)
+    job_description = Column(Text)
+    eligibility_criteria = Column(Text)
+    application_deadline = Column(DateTime)
+    status = Column(SQLEnum(DriveStatus), default=DriveStatus.UPCOMING)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now(), server_default=func.now())
 
-class StudentDriveStatus(str, enum.Enum):
-    INVITED = "invited"
-    SHORTLISTED = "shortlisted"
-    REJECTED = "rejected"
-    SELECTED = "selected"
+    institution = relationship("Institution", back_populates="placement_drives")
+    student_associations = relationship("StudentDriveJoin", back_populates="drive")
+
+class StudentDriveJoin(Base):
+    __tablename__ = "student_drive_associations"
+
+    id = Column(Integer, primary_key=True, index=True)
+    student_profile_id = Column(Integer, ForeignKey("student_profiles.id"), nullable=False)
+    drive_id = Column(Integer, ForeignKey("placement_drives.id"), nullable=False)
+    status = Column(SQLEnum(StudentDriveStatus), default=StudentDriveStatus.INVITED)
+    last_updated = Column(DateTime(timezone=True), onupdate=func.now(), server_default=func.now())
+
+    student = relationship("StudentProfile", back_populates="drive_associations")
+    drive = relationship("PlacementDriveModel", back_populates="student_associations")
 
 class User(Base):
     __tablename__ = "users"
@@ -33,6 +44,8 @@ class User(Base):
     full_name = Column(String, nullable=False)
     hashed_password = Column(String, nullable=False)
     role = Column(SQLEnum(UserRole), default=UserRole.STUDENT, nullable=False)
+    is_active = Column(Boolean, default=True)
+    last_login_at = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now(), server_default=func.now())
 
@@ -55,7 +68,7 @@ class Institution(Base):
 
     tpo_profiles = relationship("TPOProfile", back_populates="institution")
     student_profiles = relationship("StudentProfile", back_populates="institution")
-    placement_drives = relationship("PlacementDrive", back_populates="institution")
+    placement_drives = relationship("PlacementDriveModel", back_populates="institution")
 
 class TPOProfile(Base):
     __tablename__ = "tpo_profiles"
@@ -88,7 +101,7 @@ class StudentProfile(Base):
 
     user = relationship("User", back_populates="student_profile")
     institution = relationship("Institution", back_populates="student_profiles")
-    drive_associations = relationship("StudentDriveAssociation", back_populates="student")
+    drive_associations = relationship("StudentDriveJoin", back_populates="student")
 
 class Skill(Base):
     __tablename__ = "skills"
@@ -140,36 +153,6 @@ class Project(Base):
     demo_link = Column(String)
     impact = Column(String)
     analysis_results = Column(JSON, nullable=True)
-
-class PlacementDrive(Base):
-    __tablename__ = "placement_drives"
-
-    id = Column(Integer, primary_key=True, index=True)
-    institution_id = Column(Integer, ForeignKey("institutions.id"), nullable=False)
-    title = Column(String, nullable=False)
-    company_name = Column(String, nullable=False)
-    role = Column(String, nullable=False)
-    job_description = Column(Text)
-    eligibility_criteria = Column(Text)
-    application_deadline = Column(DateTime)
-    status = Column(SQLEnum(DriveStatus), default=DriveStatus.UPCOMING)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now(), server_default=func.now())
-
-    institution = relationship("Institution", back_populates="placement_drives")
-    student_associations = relationship("StudentDriveAssociation", back_populates="drive")
-
-class StudentDriveAssociation(Base):
-    __tablename__ = "student_drive_associations"
-
-    id = Column(Integer, primary_key=True, index=True)
-    student_profile_id = Column(Integer, ForeignKey("student_profiles.id"), nullable=False)
-    drive_id = Column(Integer, ForeignKey("placement_drives.id"), nullable=False)
-    status = Column(SQLEnum(StudentDriveStatus), default=StudentDriveStatus.INVITED)
-    last_updated = Column(DateTime(timezone=True), onupdate=func.now(), server_default=func.now())
-
-    student = relationship("StudentProfile", back_populates="drive_associations")
-    drive = relationship("PlacementDrive", back_populates="student_associations")
 
 class Roadmap(Base):
     __tablename__ = "roadmaps"
@@ -462,3 +445,32 @@ class ProjectDefense(Base):
     timestamp = Column(DateTime(timezone=True), server_default=func.now())
 
     submission = relationship("ProjectSubmission")
+
+class AuditLog(Base):
+    __tablename__ = "audit_logs"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    action = Column(String) # e.g., "approve_institution", "suspend_user"
+    resource = Column(String) # e.g., "institution:123"
+    ip_address = Column(String)
+    metadata_json = Column(JSON, default={})
+    timestamp = Column(DateTime(timezone=True), server_default=func.now())
+
+class UserConsent(Base):
+    __tablename__ = "user_consents"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    consent_type = Column(String) # gdpr, ccpa, recording
+    is_granted = Column(Boolean, default=False)
+    version = Column(String)
+    timestamp = Column(DateTime(timezone=True), server_default=func.now())
+
+class PlatformMetric(Base):
+    __tablename__ = "platform_metrics"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    metric_name = Column(String, unique=True, index=True)
+    value = Column(Float)
+    timestamp = Column(DateTime(timezone=True), server_default=func.now())

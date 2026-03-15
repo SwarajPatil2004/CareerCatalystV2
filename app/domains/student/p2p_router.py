@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 from app.db.database import get_db
-from app.domains.identity.dependencies import get_current_user
+from app.api.deps import get_current_user
 from app.db.models import User, ProjectSubmission
 from app.services.p2p_service import P2PService
 from app.services.gamification_service import GamificationService

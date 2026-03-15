@@ -33,7 +33,7 @@ def get_public_portfolio(slug: str, db: Session = Depends(get_db)):
         "projects": projects
     }
 
-from app.domains.identity.dependencies import get_current_user
+from app.api.deps import get_current_user
 
 @router.post("/claim-slug")
 def claim_portfolio_slug(

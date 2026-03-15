@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { 
-  Mic, MicOff, Video, VideoOff, 
-  Shield, Timer, MessageSquare, 
-  Send, AlertCircle, CheckCircle2 
+import {
+  Mic, MicOff, Video, VideoOff,
+  Shield, Timer, MessageSquare,
+  Send, AlertCircle, CheckCircle2,
+  CheckCircle, Settings, Camera, Info,
+  Lock, ArrowRight, ShieldCheck
 } from 'lucide-react';
 import axios from 'axios';
 
@@ -22,27 +24,39 @@ const InterviewRoom = () => {
   const [isVideoOff, setIsVideoOff] = useState(false);
   const [status, setStatus] = useState<'intro' | 'interview' | 'submitting' | 'feedback'>('intro');
   const [scores, setScores] = useState<any>(null);
+  const [proctoringLogs, setProctoringLogs] = useState<any[]>([]);
+  const [consentGranted, setConsentGranted] = useState(false);
+  const [showConsentModal, setShowConsentModal] = useState(true);
+  const [loading, setLoading] = useState(true); // Added loading state
 
   const recognitionRef = useRef<any>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
-    const fetchSession = async () => {
+    if (!consentGranted) {
+      setLoading(false); // If consent not granted, not loading interview content yet
+      return;
+    }
+
+    const startInterview = async () => {
+      setLoading(true);
       try {
         const response = await axios.get(`/api/interviews/${sessionId}/report`, {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         });
         setSession(response.data);
+        setLoading(false);
       } catch (error) {
         console.error('Error fetching session:', error);
+        setLoading(false);
       }
     };
-    fetchSession();
+    startInterview();
 
     // Proctoring: Tab switch detection
     const handleVisibilityChange = () => {
       if (document.hidden) {
-        axios.post(`/api/interviews/${sessionId}/proctor`, 
+        axios.post(`/api/interviews/${sessionId}/proctor`,
           { event_type: 'tab_switch' },
           { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }}
         );
@@ -51,26 +65,26 @@ const InterviewRoom = () => {
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, [sessionId]);
+  }, [sessionId, consentGranted]); // Added consentGranted to dependencies
 
   // Webcam setup
   useEffect(() => {
-    if (status === 'interview') {
+    if (status === 'interview' && consentGranted) { // Only setup webcam if consent granted
       navigator.mediaDevices.getUserMedia({ video: true, audio: true })
         .then(stream => {
           if (videoRef.current) videoRef.current.srcObject = stream;
         })
         .catch(err => console.error('Camera access denied:', err));
     }
-  }, [status]);
+  }, [status, consentGranted]); // Added consentGranted to dependencies
 
   const startRecognition = () => {
     if (!SpeechRecognition) return alert('Speech recognition not supported in this browser.');
-    
+
     recognitionRef.current = new SpeechRecognition();
     recognitionRef.current.continuous = true;
     recognitionRef.current.interimResults = true;
-    
+
     recognitionRef.current.onresult = (event: any) => {
       let interimTranscript = '';
       for (let i = event.resultIndex; i < event.results.length; ++i) {
@@ -95,7 +109,7 @@ const InterviewRoom = () => {
 
   const nextQuestion = async () => {
     stopRecognition();
-    
+
     // Submit current response
     try {
       await axios.post(`/api/interviews/${sessionId}/respond`, {
@@ -118,11 +132,50 @@ const InterviewRoom = () => {
     }
   };
 
-  if (!session) return <div className="p-8 text-center text-gray-500">Loading AI Interview...</div>;
+  if (loading && !showConsentModal) return <div className="min-h-screen flex items-center justify-center font-black animate-pulse text-indigo-600 uppercase tracking-[0.3em]">Calibrating AI Matrix...</div>;
+
+  if (!session && !showConsentModal && !loading) return <div className="p-8 text-center text-gray-500">Loading AI Interview...</div>;
+
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white flex flex-col">
-      {/* Top Bar */}
+    <div className="min-h-screen bg-slate-950 text-white relative overflow-hidden">
+      {/* Consent Modal Overlay */}
+      {showConsentModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-950/90 backdrop-blur-xl">
+           <div className="max-w-xl w-full bg-slate-900 border border-white/10 p-10 rounded-[2.5rem] shadow-2xl shadow-indigo-500/20">
+              <div className="w-16 h-16 bg-indigo-500/10 rounded-2xl flex items-center justify-center mb-8">
+                 <Lock className="text-indigo-400" size={32} />
+              </div>
+              <h2 className="text-4xl font-black mb-4 tracking-tighter italic uppercase">Security & Privacy</h2>
+              <p className="text-gray-400 font-medium leading-relaxed mb-8">
+                To maintain the integrity of our verified talent network, this session is subjects to proctoring and recording. Your data is protected under <span className="text-white font-bold">FERPA & GDPR</span> guidelines.
+              </p>
+
+              <div className="space-y-4 mb-10">
+                 <div className="flex items-start gap-4 p-4 bg-white/5 rounded-2xl border border-white/5">
+                    <ShieldCheck className="text-green-400 shrink-0" size={20} />
+                    <p className="text-xs font-bold text-gray-300">Data Minimization: Recordings are automatically purged after 30 days.</p>
+                 </div>
+                 <div className="flex items-start gap-4 p-4 bg-white/5 rounded-2xl border border-white/5">
+                    <Lock className="text-indigo-400 shrink-0" size={20} />
+                    <p className="text-xs font-bold text-gray-300">Encryption: Your responses are encrypted-at-rest using AES-256.</p>
+                 </div>
+              </div>
+
+              <div className="flex flex-col gap-4">
+                 <button
+                   onClick={() => { setConsentGranted(true); setShowConsentModal(false); }}
+                   className="w-full py-5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl font-black transition-all flex items-center justify-center gap-2 group"
+                 >
+                   I CONSENT & START <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+                 </button>
+                 <button className="text-xs font-bold text-gray-500 uppercase hover:text-white transition-colors">Read Full Privacy Policy</button>
+              </div>
+           </div>
+        </div>
+      )}
+
+      {/* Main Content */}
       <div className="h-16 border-b border-gray-800 flex items-center justify-between px-8">
         <div className="flex items-center gap-2">
           <Shield className="text-indigo-400" size={20} />

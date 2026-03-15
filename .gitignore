@@ -1,0 +1,86 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+*.pdb
+*.egg
+*.egg-info/
+dist/
+build/
+.env
+.venv
+venv/
+ENV/
+.envrc
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Jupyter Notebooks
+.ipynb_checkpoints/
+
+# VS Code
+.vscode/
+
+# Docker
+*.log
+docker-compose.override.yml
+
+# Node.js
+node_modules/
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+
+# Environment files
+.env
+.env.*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Misc
+*.sqlite3
+*.db
+*.swp
+*.swo
+
+# Ignore SSL keys
+nginx/ssl/
+
+# Ignore test output
+main_error_utf8.txt
+
+# Ignore coverage and reports
+htmlcov/
+.coverage
+coverage.xml
+*.cover
+*.pyc
+
+# Ignore backup files
+*.bak
+*.tmp
+
+# Ignore frontend cache
+frontend/.cache/
+
+# Ignore backend cache
+__pycache__/
+
+# Ignore seeds
+app/seeds/__pycache__/
+
+# Ignore compiled files
+*.so
+*.dll
+*.exe
+
+# Ignore logs
+*.log
+
+# Ignore roadmap and student folders (if needed)
+app/domains/roadmap/__pycache__/
+app/domains/student/__pycache__/

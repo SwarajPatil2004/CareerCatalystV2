@@ -8,7 +8,9 @@ class MonitoringService:
         thirty_days_ago = datetime.now() - timedelta(days=30)
         # TPOs with no activity in 30 days
         risk_tpos = db.query(User).filter(
-            User.role == "tpo",
+        from app.db.constants import UserRole
+        risk_tpos = db.query(User).filter(
+            User.role == UserRole.TPO,
             User.last_login_at < thirty_days_ago
         ).all()
         

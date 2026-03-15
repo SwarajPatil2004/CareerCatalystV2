@@ -2,8 +2,9 @@ from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from app.db.database import get_db
-from app.domains.identity.dependencies import get_current_user, RoleChecker
-from app.db.models import User, UserRole
+from app.api.deps import get_current_user, RoleChecker
+from app.db.models import User
+from app.db.constants import UserRole
 from app.domains.tpo.service import TPOService
 from app.domains.tpo.schemas import (
     TPOProfileCreate, TPOProfileUpdate, TPOProfileResponse,
